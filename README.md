@@ -1,4 +1,4 @@
-# ESP32+PS5 Controller Quadcopter Flight Control
+# ESP32+PS5 Controller Quadcopter 
 
 ##  Overview
 This project implements a dual-loop PID-based flight controller for a quadcopter using an **ESP32** microcontroller and an **MPU-6050** IMU sensor.  
