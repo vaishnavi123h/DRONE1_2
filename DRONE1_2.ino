@@ -12,7 +12,7 @@ const float LOOP_TIME_S = 0.004; // 4ms loop time (250Hz)
 const int THROTTLE_CUTOFF = 1000;
 const int THROTTLE_IDLE = 1002;
 
-// Angle PID (Outer Loop: Angle Error -> Desired Rate)
+// Angle PID 
 const float PAngleRoll = 2.0; 
 const float IAngleRoll = 0.5; 
 const float DAngleRoll = 0.007; 
@@ -22,7 +22,7 @@ const float DAnglePitch = DAngleRoll;
 const float MAX_ANGLE_I_TERM = 400.0; // Max I-term output
 const float MAX_ANGLE_PID_OUT = 400.0; // Max output for Desired Rate
 
-// Rate PID (Inner Loop: Rate Error -> Motor Input)
+// Rate PID 
 const float PRateRoll = 0.625; 
 const float IRateRoll = 0.7; 
 const float DRateRoll = 0.0005; 
@@ -48,8 +48,7 @@ float AccZCalibration = 0.05;
 // Complementary Filter Constants
 const float COMP_ALPHA = 0.991; // Gyro weight (0.991)
 const float ACC_WEIGHT = 1.0 - COMP_ALPHA; // Accelerometer weight (0.009)
-const float MAX_COMP_ANGLE = 20.0; // Max angle clamp (for sanity)
-
+const float MAX_COMP_ANGLE = 20.0; // Max angle clamp
 //GLOBAL VARIABLES
 
 Servo mot1, mot2, mot3, mot4;
@@ -93,7 +92,7 @@ volatile int MotorInput1, MotorInput2, MotorInput3, MotorInput4;
 
 void gyro_signal() {
     // I2C Communication for MPU-6050
-    // Set digital low-pass filter (0x05 for 10Hz/20ms delay) and Accel config (0x10 for +/-8g)
+    // Set digital low-pass filter
     Wire.beginTransmission(0x68);
     Wire.write(0x1A); Wire.write(0x05); Wire.endTransmission();
     Wire.beginTransmission(0x68);
@@ -107,11 +106,11 @@ void gyro_signal() {
     int16_t AccYLSB = Wire.read() << 8 | Wire.read();
     int16_t AccZLSB = Wire.read() << 8 | Wire.read();
 
-    // Set Gyro config (0x08 for +/-500 deg/s)
+    // Set Gyro config
     Wire.beginTransmission(0x68);
     Wire.write(0x1B); Wire.write(0x8); Wire.endTransmission();
 
-    // Read Gyroscope (6 bytes from 0x43)
+    // Read Gyroscope 
     Wire.beginTransmission(0x68);
     Wire.write(0x43); Wire.endTransmission();
     Wire.requestFrom(0x68, 6);
@@ -120,11 +119,11 @@ void gyro_signal() {
     int16_t GyroZ = Wire.read() << 8 | Wire.read();
 
     // Convert to Engineering Units
-    // Accel: MPU-6050 with +/-8g scale is 4096 LSB/g
+    // Accel: MPU-6050 
     AccX = (float)AccXLSB / 4096.0;
     AccY = (float)AccYLSB / 4096.0;
     AccZ = (float)AccZLSB / 4096.0;
-    // Gyro: MPU-6050 with +/-500 deg/s scale is 65.5 LSB/(deg/s)
+    // Gyro: MPU-6050
     RateRoll = (float)GyroX / 65.5;
     RatePitch = (float)GyroY / 65.5;
     RateYaw = (float)GyroZ / 65.5;
@@ -152,7 +151,7 @@ void gyro_signal() {
 
 void setup(void) {
     Serial.begin(115200);
-    ps5.begin("PS5 MAC address!");
+    ps5.begin("enter PS5 MAC address!");
     pinMode(2, OUTPUT);
 
     // MPU-6050 Initialization
@@ -186,7 +185,7 @@ void setup(void) {
     mot3.writeMicroseconds(THROTTLE_CUTOFF);
     mot4.writeMicroseconds(THROTTLE_CUTOFF);
 
-    // Wait for ESCs to arm (usually a few seconds)
+    // Wait for ESCs to arm 
     delay(2000);
 
     LoopTimer = micros();
@@ -268,7 +267,7 @@ void loop(void) {
     DtermRoll = DRateRoll * ((ErrorRateRoll - PrevErrorRateRoll) / LOOP_TIME_S);
     InputRoll = PtermRoll + ItermRoll + DtermRoll;
     InputRoll = constrain(InputRoll, -MAX_RATE_PID_OUT, MAX_RATE_PID_OUT);
-    PrevErrorRateRoll = ErrorRateRoll; // FIX: Store positive error
+    PrevErrorRateRoll = ErrorRateRoll; // FIX - Store positive error
     PrevItermRateRoll = ItermRoll;
 
     // 2. Pitch Rate PID
@@ -278,7 +277,7 @@ void loop(void) {
     DtermPitch = DRatePitch * ((ErrorRatePitch - PrevErrorRatePitch) / LOOP_TIME_S);
     InputPitch = PtermPitch + ItermPitch + DtermPitch;
     InputPitch = constrain(InputPitch, -MAX_RATE_PID_OUT, MAX_RATE_PID_OUT);
-    PrevErrorRatePitch = ErrorRatePitch; // FIX: Store positive error
+    PrevErrorRatePitch = ErrorRatePitch; // FIX - Store positive error
     PrevItermRatePitch = ItermPitch;
 
     // 3. Yaw Rate PID
@@ -288,7 +287,7 @@ void loop(void) {
     DtermYaw = DRateYaw * ((ErrorRateYaw - PrevErrorRateYaw) / LOOP_TIME_S);
     InputYaw = PtermYaw + ItermYaw + DtermYaw;
     InputYaw = constrain(InputYaw, -MAX_RATE_PID_OUT, MAX_RATE_PID_OUT);
-    PrevErrorRateYaw = ErrorRateYaw; // FIX: Store positive error
+    PrevErrorRateYaw = ErrorRateYaw; // FIX- Store positive error
     PrevItermRateYaw = ItermYaw;
 
 
@@ -305,7 +304,7 @@ void loop(void) {
     MotorInput3 = round(InputThrottle + InputRoll + InputPitch - InputYaw);
     MotorInput4 = round(InputThrottle + InputRoll - InputPitch + InputYaw);
 
-    // Output Constraining (Limit max/min)
+    // Output Constraining 
     MotorInput1 = constrain(MotorInput1, THROTTLE_IDLE, 1900);
     MotorInput2 = constrain(MotorInput2, THROTTLE_IDLE, 1900);
     MotorInput3 = constrain(MotorInput3, THROTTLE_IDLE, 1900);
