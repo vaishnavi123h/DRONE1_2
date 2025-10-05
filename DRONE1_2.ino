@@ -152,7 +152,7 @@ void gyro_signal() {
 
 void setup(void) {
     Serial.begin(115200);
-    ps5.begin("58:10:31:2f:c8:b5");
+    ps5.begin("PS5 MAC address!");
     pinMode(2, OUTPUT);
 
     // MPU-6050 Initialization
